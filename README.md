@@ -24,7 +24,7 @@ Pillow==9.0.1
 h5py==2.10.0
 
 ![MC nodule](https://user-images.githubusercontent.com/78161848/178894262-2fa77c60-18e9-46d9-b715-76e5a843bb23.png)
-Overall architecture of MC module
+                                                          Overall architecture of MC module
 
 
 ![Figure](https://user-images.githubusercontent.com/78161848/178894589-6852cd21-4c37-4086-aea0-c271ff810d61.png)
