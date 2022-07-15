@@ -43,13 +43,14 @@ class _BatchAttNorm(_BatchNorm):
         self.bias_readjust.data.fill_(-1)
         self.weight.data.fill_(1)
         self.bias.data.fill_(0)
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, input):
         self._check_input_dim(input)
 
         # Batch norm
         attention = self.sigmoid(self.avg(input) * self.weight_readjust + self.bias_readjust)
-        bn_w = self.weight * attention
+        bn_w = self.weight * self.softmax(attention)
 
         out_bn = F.batch_norm(
             input, self.running_mean, self.running_var, None, None,
@@ -173,18 +174,18 @@ class EMABlock(nn.Module):
         return out
 
 
-class EPSANet(nn.Module):
+class EMANet(nn.Module):
     def __init__(self,block, layers, num_classes=100):
-        super(EPSANet, self).__init__()
+        super(EMANet, self).__init__()
         self.inplanes = 64
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layers(block, 64, layers[0], stride=1)
-        self.layer2 = self._make_layers(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layers(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layers(block, 512, layers[3], stride=2)
+        self.layer1 = self._make_layers(block, 64, layers[0], stride=1, groups=[1, 2, 4, 8])
+        self.layer2 = self._make_layers(block, 128, layers[1], stride=2, groups=[1, 2, 4, 8])
+        self.layer3 = self._make_layers(block, 256, layers[2], stride=2, groups=[1, 2, 4, 8])
+        self.layer4 = self._make_layers(block, 512, layers[3], stride=2, groups=[16, 16, 16, 16])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
@@ -196,7 +197,7 @@ class EPSANet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def _make_layers(self, block, planes, num_blocks, stride=1):
+    def _make_layers(self, block, planes, num_blocks, stride=1, groups=[1, 4, 8, 16]):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -206,10 +207,10 @@ class EPSANet(nn.Module):
             )
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample))
+        layers.append(block(self.inplanes, planes, stride, downsample, conv_groups=groups))
         self.inplanes = planes * block.expansion
         for i in range(1, num_blocks):
-            layers.append(block(self.inplanes, planes))
+            layers.append(block(self.inplanes, planes, conv_groups=groups))
 
         return nn.Sequential(*layers)
 
@@ -232,11 +233,11 @@ class EPSANet(nn.Module):
 
 
 def emanet50():
-    model = EPSANet(EMABlock, [3, 4, 6, 3], num_classes=100)
+    model = EMANet(EMABlock, [3, 4, 6, 3], num_classes=100)
     return model
 
 
 def emanet101():
-    model = EPSANet(EMABlock, [3, 4, 23, 3], num_classes=100)
+    model = EMANet(EMABlock, [3, 4, 23, 3], num_classes=100)
     return model
 
