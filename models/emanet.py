@@ -221,10 +221,10 @@ class EMANet(nn.Module):
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layers(block, 64, layers[0], stride=1)
-        self.layer2 = self._make_layers(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layers(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layers(block, 512, layers[3], stride=2)
+        self.layer1 = self._make_layers(block, 64, layers[0], stride=1, groups=[1, 2, 4, 8])
+        self.layer2 = self._make_layers(block, 128, layers[1], stride=2, groups=[1, 2, 4, 8])
+        self.layer3 = self._make_layers(block, 256, layers[2], stride=2, groups=[1, 2, 4, 8])
+        self.layer4 = self._make_layers(block, 512, layers[3], stride=2, groups=[16, 16, 16,16])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
@@ -236,7 +236,7 @@ class EMANet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def _make_layers(self, block, planes, num_blocks, stride=1):
+    def _make_layers(self, block, planes, num_blocks, stride=1, groups=[1, 4, 8, 16]):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -246,10 +246,10 @@ class EMANet(nn.Module):
             )
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample))
+        layers.append(block(self.inplanes, planes, stride, downsample, conv_groups=groups))
         self.inplanes = planes * block.expansion
         for i in range(1, num_blocks):
-            layers.append(block(self.inplanes, planes))
+            layers.append(block(self.inplanes, planes, conv_groups=groups))
 
         return nn.Sequential(*layers)
 
