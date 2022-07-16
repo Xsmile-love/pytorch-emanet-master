@@ -27,6 +27,7 @@ h5py==2.10.0
                                                           Overall architecture of MC module
 
 
+mini-ImageNet Classification
 ![Figure](https://user-images.githubusercontent.com/78161848/178894589-6852cd21-4c37-4086-aea0-c271ff810d61.png)
 Comparisons of recently SOTA attention models on mini-ImageNet, using ResNets as backbones, in terms of accuracy, network parameters, and FLOPs. The size of circles indicates the FLOPs
 
