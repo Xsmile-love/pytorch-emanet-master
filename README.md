@@ -23,6 +23,12 @@ Pillow==9.0.1
 
 h5py==2.10.0
 
+
+To evaluate a pre-trained emanet50 on CIFAR10 val with a single GPU run:
+
+python main.py -a emanet50 -e --resume /checkpoint/emanet/ckpt.pth.tar
+
+Approach
 ![MC nodule](https://user-images.githubusercontent.com/78161848/178894262-2fa77c60-18e9-46d9-b715-76e5a843bb23.png)
                                                           Overall architecture of MC module
 
