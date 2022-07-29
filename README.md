@@ -1,7 +1,7 @@
 # pytorch-emanet-master
 Multiscale Hybrid Convolutional Deep Neural Network with Channel Attention
 
-安装所需的包
+Install the required libraries
 
 pip/conda install ...
 
