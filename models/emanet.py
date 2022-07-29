@@ -7,6 +7,12 @@ import torch.nn.functional as F
 
 
 class _BatchAttNorm(_BatchNorm):
+    """
+    The softmax function is used to recalibrate the channel weight vector to
+    enhance the channel modeling ability of SoftBAN and improve the network performance.
+    Args:
+        num_features: Number of input feature map channels
+    """
     def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=False):
         super(_BatchAttNorm, self).__init__(num_features, eps, momentum, affine)
         self.avg = nn.AdaptiveAvgPool2d((1, 1))
@@ -19,6 +25,7 @@ class _BatchAttNorm(_BatchNorm):
         self.bias_readjust.data.fill_(-1)
         self.weight.data.fill_(1)
         self.bias.data.fill_(0)
+        # parameter recalibration
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, input):
@@ -36,7 +43,7 @@ class _BatchAttNorm(_BatchNorm):
         return out_bn
 
 
-class BAN2d(_BatchAttNorm):
+class SoftBAN2d(_BatchAttNorm):
     def _check_input_dim(self, input):
         if input.dim() != 4:
             raise ValueError('expected 4D input (got {}D input)'.format(input.dim()))
@@ -100,13 +107,15 @@ def ConvMixer1(in_planes, out_planes, kernel_size=3, mixer_size=9, stride=1, pad
         nn.GELU(),
         nn.BatchNorm2d(out_planes),
         *[nn.Sequential(
+                # spatial mixture
                 Residual(nn.Sequential(
                     nn.Conv2d(out_planes, out_planes, mixer_size, groups=out_planes, padding="same"),
                     nn.GELU(),
                     nn.BatchNorm2d(out_planes)
                 )),
+                # channel mixture
                 Residual(nn.Sequential(
-                    BAN2d(out_planes),
+                    SoftBAN2d(out_planes),
                     nn.Conv2d(out_planes, out_planes, kernel_size=1),
                     nn.GELU(),
                     nn.BatchNorm2d(out_planes)
