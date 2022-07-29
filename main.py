@@ -34,7 +34,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
-# Data
+# Data loading code
 print('==> Preparing data..')
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
@@ -61,7 +61,7 @@ testloader = torch.utils.data.DataLoader(
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
-# Model
+# Create model
 print('==> Building model..')
 if args.resume:
     print("=> using pre-trained model '{}'".format(args.arch))
@@ -73,19 +73,23 @@ else:
 
 net = model.to(device)
 if device == 'cuda':
+    # DataParallel will divide and allocate batch_size to all available GPUs
     net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
 
+# Optionally resume from a checkpoint
 if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
     checkpoint = torch.load(args.resume)
     net.load_state_dict(checkpoint['net'])
+    # best_acc may be from a checkpoint from single GPU
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
     # start_epoch = 0
 
+# Define loss function (criterion) and optimizer
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr,
                       momentum=0.9, weight_decay=5e-4)
@@ -95,13 +99,15 @@ Loss_plot = {}
 train_prec1_plot = {}
 val_prec1_plot = {}
 
+# Experiment data save directory creation
 directory = "runs/%s/" % (args.arch + '_' + args.action)
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-# Training
+# Train for one epoch
 def train(epoch):
     print('\nEpoch: %d' % epoch)
+    # switch to train mode
     net.train()
     train_loss = 0
     correct = 0
@@ -110,27 +116,34 @@ def train(epoch):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
+        # Compute output
         outputs = net(inputs)
+        # Compute gradient and do SGD step
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
-
+        
+        # Compute total loss and prediction accuracy
         train_loss += loss.item()
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
-
+        
+        # Output training progress
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
         batch = batch_idx
+        
+    # Measure accuracy and record loss
     Loss_plot[epoch] = train_loss/(batch+1)
     train_prec1_plot[epoch] = 100.*correct/total
     data_save(directory + 'Loss_plot.txt', Loss_plot)
     data_save(directory + 'train_prec1.txt', train_prec1_plot)
 
-
+# Test for one epoch
 def test(epoch):
     global best_acc
+    # switch to test mode
     net.eval()
     test_loss = 0
     correct = 0
@@ -138,20 +151,23 @@ def test(epoch):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
+            # Compute output
             outputs = net(inputs)
             loss = criterion(outputs, targets)
-
+            
+            # Compute total loss and prediction accuracy
             test_loss += loss.item()
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
-
+            
+            # this should also be done with the ProgressMeter
             progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
         val_prec1_plot[epoch] = 100.*correct/total
     data_save(directory + 'val_prec1.txt', val_prec1_plot)
 
-    # Save checkpoint.
+    # Remember best acc@1 and save checkpoint
     acc = 100.*correct/total
     if acc > best_acc:
         print('Saving..')
@@ -166,7 +182,7 @@ def test(epoch):
         torch.save(state, './checkpoint/ckpt.pth')
         best_acc = acc
 
-
+# Experiment data save code
 def data_save(root, file):
     if not os.path.exists(root):
         os.mknod(root)
@@ -184,8 +200,9 @@ def data_save(root, file):
             file_temp.write(str(line) + " " + str(file[line]) + '\n')
     file_temp.close()
 
-
+# Model training
 for epoch in range(start_epoch, start_epoch+200):
     train(epoch)
+    # Evaluate on validation set
     test(epoch)
     scheduler.step()
