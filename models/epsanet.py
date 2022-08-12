@@ -32,34 +32,6 @@ def conv1x1(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
-class Residual(nn.Module):
-    def __init__(self, fn):
-        super().__init__()
-        self.fn = fn
-
-    def forward(self, x):
-        return self.fn(x) + x
-
-
-def ConvMixer1(in_planes, out_planes, kernel_size=3, mixer_size=9, stride=1, padding=1, dilation=1, groups=1):
-    return nn.Sequential(
-        nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding,
-                  dilation=dilation, groups=groups, bias=False),
-        nn.GELU(),
-        nn.BatchNorm2d(out_planes),
-        *[nn.Sequential(
-                Residual(nn.Sequential(
-                    nn.Conv2d(out_planes, out_planes, mixer_size, groups=out_planes, padding="same"),
-                    nn.GELU(),
-                    nn.BatchNorm2d(out_planes)
-                )),
-                nn.Conv2d(out_planes, out_planes, kernel_size=1),
-                nn.GELU(),
-                nn.BatchNorm2d(out_planes)
-        )]
-    )
-
-
 class PSAModule(nn.Module):
 
     def __init__(self, inplans, planes, conv_kernels=[3, 5, 7, 9], stride=1, conv_groups=[1, 4, 8, 16]):
@@ -205,24 +177,7 @@ class EPSANet(nn.Module):
 
 
 def epsanet50():
-    # model = EPSANet(EPSABlock, [3, 4, 6, 3], num_classes=1000)
-    model = EPSANet(EPSABlock, [3, 4, 6, 3])
-    # if pretrained:
-    #     # state_dict = load_state_dict_from_url("https://download.pytorch.org/models/resnet50-19c8e357.pth",
-    #     #                                       model_dir="./model_data")
-    #     checkpoint = torch.load('./model_data/model_best.pth.tar')
-    #     model.load_state_dict(checkpoint['state_dict'])
-    # # ----------------------------------------------------------------------------#
-    # #   获取特征提取部分，从conv1到model.layer3，最终获得一个38,38,1024的特征层
-    # # ----------------------------------------------------------------------------#
-    # features = list([model.conv1, model.bn1, model.relu, model.maxpool, model.layer1, model.layer2, model.layer3])
-    # # ----------------------------------------------------------------------------#
-    # #   获取分类部分，从model.layer4到model.avgpool
-    # # ----------------------------------------------------------------------------#
-    # classifier = list([model.layer4, model.avgpool])
-    #
-    # features = nn.Sequential(*features)
-    # classifier = nn.Sequential(*classifier)
+    model = EPSANet(EPSABlock, [3, 4, 6, 3], num_classes=1000)
     return model
 
 
