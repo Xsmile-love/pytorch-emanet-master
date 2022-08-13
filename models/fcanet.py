@@ -3,6 +3,7 @@ import math
 import torch.nn as nn
 import torch
 
+# Get frequency index
 def get_freq_indices(method):
     assert method in ['top1', 'top2', 'top4', 'top8', 'top16', 'top32',
                       'bot1', 'bot2', 'bot4', 'bot8', 'bot16', 'bot32',
@@ -33,7 +34,7 @@ def get_freq_indices(method):
         raise NotImplementedError
     return mapper_x, mapper_y
 
-
+# Building multi-spectral attention layer
 class MultiSpectralAttentionLayer(torch.nn.Module):
     def __init__(self, channel, dct_h, dct_w, reduction=16, freq_sel_method='top16'):
         super(MultiSpectralAttentionLayer, self).__init__()
@@ -128,10 +129,12 @@ class MultiSpectralDCTLayer(nn.Module):
         return dct_filter
 
 def conv3x3(in_planes, out_planes, stride=1):
+    '''3x3 convolutional layer with padding'''
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
 
 
 class FcaBottleneck(nn.Module):
+    '''This Bottleneck is similar to the resnet network Bottleneck, only with additional multi-spectral attention layers'''
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
@@ -181,6 +184,7 @@ class FcaBottleneck(nn.Module):
 
 
 class FcaBasicBlock(nn.Module):
+    '''This basic block is similar to the resnet network basic block, only with additional multi-spectral attention layers'''
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
@@ -296,23 +300,7 @@ def fcanet50(num_classes=10, pretrained=False):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     model = ResNet(FcaBottleneck, [3, 4, 6, 3], num_classes=num_classes)
-    # model.avgpool = nn.AdaptiveAvgPool2d(1)
-    # if pretrained:
-    #     # state_dict = load_state_dict_from_url("https://download.pytorch.org/models/resnet50-19c8e357.pth",
-    #     #                                       model_dir="./model_data")
-    #     checkpoint = torch.load('./model_data/pretrain_data/fcanet50_/model_best.pth.tar')
-    #     model.load_state_dict(checkpoint['state_dict'])
-    # # ----------------------------------------------------------------------------#
-    # #   获取特征提取部分，从conv1到model.layer3，最终获得一个38,38,1024的特征层
-    # # ----------------------------------------------------------------------------#
-    # features = list([model.conv1, model.bn1, model.relu, model.maxpool, model.layer1, model.layer2, model.layer3])
-    # # ----------------------------------------------------------------------------#
-    # #   获取分类部分，从model.layer4到model.avgpool
-    # # ----------------------------------------------------------------------------#
-    # classifier = list([model.layer4, model.avgpool])
-    #
-    # features = nn.Sequential(*features)
-    # classifier = nn.Sequential(*classifier)
+    
     return model
 
 
