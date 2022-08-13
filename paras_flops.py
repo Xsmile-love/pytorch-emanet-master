@@ -19,11 +19,14 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='emanet50',
 def main():
     global args
     args = parser.parse_args()
+    # Model instantiation
     model = models.__dict__[args.arch]()    
     print(model)
+    # Create random input
     input = torch.randn(1, 3, 32, 32)
     model.train()
     # model.eval()
+    # Computational Model Overhead and print
     flops, params = profile(model, inputs=(input, ))
     print("flops = ", flops)
     print("params = ", params)
@@ -32,6 +35,11 @@ def main():
     print("params = ", params)
 
 def clever_format(nums, format="%.2f"):
+    '''
+    Input:nums
+    Args:
+         Converted to units T, G, M, K,or B based on model overhead size
+    '''
     clever_nums = []
 
     for num in nums:
