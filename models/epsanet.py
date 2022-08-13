@@ -3,7 +3,11 @@ import torch.nn as nn
 import math
 # from .SE_Weight_module import SEWeightModule
 class SEWeightModule(nn.Module):
-
+    '''
+    Input: feature map channels
+    Args:
+         Statistical information modeling for feature map channels
+    '''
     def __init__(self, channels, reduction=16):
         super(SEWeightModule, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
@@ -33,7 +37,13 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 
 class PSAModule(nn.Module):
-
+    '''
+    inplans: input feature map channels
+    planes: output feature map channels
+    conv_kernels:Convolution kernel size of different branches
+    Args:
+        Multi-branch architecture module, extract multi-scale information from input feature map
+    '''
     def __init__(self, inplans, planes, conv_kernels=[3, 5, 7, 9], stride=1, conv_groups=[1, 4, 8, 16]):
         super(PSAModule, self).__init__()
         self.conv_1 = conv(inplans, planes // 4, kernel_size=conv_kernels[0], padding=conv_kernels[0] // 2,
@@ -54,19 +64,23 @@ class PSAModule(nn.Module):
         x2 = self.conv_2(x)
         x3 = self.conv_3(x)
         x4 = self.conv_4(x)
-
+        
+        # (B,C,H,W)-->(B,4,C/4,H',W')
         feats = torch.cat((x1, x2, x3, x4), dim=1)
         feats = feats.view(batch_size, 4, self.split_channel, feats.shape[2], feats.shape[3])
-
+        
+        # Calculation of different branch weights
         x1_se = self.se(x1)
         x2_se = self.se(x2)
         x3_se = self.se(x3)
         x4_se = self.se(x4)
-
+        
+        # Recorrecting different branch weights to enhance modeling capability
         x_se = torch.cat((x1_se, x2_se, x3_se, x4_se), dim=1)
         attention_vectors = x_se.view(batch_size, 4, self.split_channel, 1, 1)
         attention_vectors = self.softmax(attention_vectors)
         feats_weight = feats * attention_vectors
+        # (B,4,C/4,H',W')-->(B,C,H',W')
         for i in range(4):
             x_se_weight_fp = feats_weight[:, i, :, :]
             if i == 0:
@@ -78,6 +92,7 @@ class PSAModule(nn.Module):
 
 
 class EPSABlock(nn.Module):
+    '''This block is similar to ResNet network ' s Bottleneck, but instead of 3x3 convolution in Bottleneck with PSA module'''
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, norm_layer=None, conv_kernels=[3, 5, 7, 9],
@@ -109,7 +124,7 @@ class EPSABlock(nn.Module):
 
         out = self.conv3(out)
         out = self.bn3(out)
-
+        # shortcut branch
         if self.downsample is not None:
             identity = self.downsample(x)
 
@@ -132,7 +147,8 @@ class EPSANet(nn.Module):
         self.layer4 = self._make_layers(block, 512, layers[3], stride=2)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
-
+        
+        # Layers initialization
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -177,11 +193,13 @@ class EPSANet(nn.Module):
 
 
 def epsanet50():
+    '''Building the epsanet50 network'''
     model = EPSANet(EPSABlock, [3, 4, 6, 3], num_classes=1000)
     return model
 
 
 def epsanet101():
+    '''Building the epsanet101 network'''
     model = EPSANet(EPSABlock, [3, 4, 23, 3], num_classes=10)
     return model
 
