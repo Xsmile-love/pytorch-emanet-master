@@ -23,6 +23,7 @@ def conv3x3(in_planes, out_planes, stride=1):
                      padding=1, bias=False)
 
 class ChannelAttention(nn.Module):
+    '''Construction of the channel attention'''
     def __init__(self, in_planes, ratio=16):
         super(ChannelAttention, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
@@ -34,12 +35,17 @@ class ChannelAttention(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
+        # (B,C,H,W)-->(B,C,1,1)
+        # self.avg_pool: Compute spatial average value
+        # self.max_pool: Compute spatial maximum value
+        # Sharing MLP layers
         avg_out = self.fc(self.avg_pool(x))
         max_out = self.fc(self.max_pool(x))
         out = avg_out + max_out
         return self.sigmoid(out)
 
 class SpatialAttention(nn.Module):
+    '''Construction of the spatial attention'''
     def __init__(self, kernel_size=7):
         super(SpatialAttention, self).__init__()
 
@@ -47,13 +53,16 @@ class SpatialAttention(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        avg_out = torch.mean(x, dim=1, keepdim=True)
-        max_out, _ = torch.max(x, dim=1, keepdim=True)
-        x = torch.cat([avg_out, max_out], dim=1)
-        x = self.conv1(x)
+        # (B,C,H,W)-->(B,1,H,W)
+        # Calculate the mean and maximum values of channels respectively
+        avg_out = torch.mean(x, dim=1, keepdim=True)   # (B,C,H,W)-->(B,1,H,W)
+        max_out, _ = torch.max(x, dim=1, keepdim=True)    # (B,C,H,W)-->(B,1,H,W)
+        x = torch.cat([avg_out, max_out], dim=1)   # (B,C,H,W)-->(B,2,H,W)
+        x = self.conv1(x)       # (B,2,H,W)-->(B,1,H,W)
         return self.sigmoid(x)
-
+# The following are variants of the ResNet network, for more notes see the official ResNet network
 class BasicBlock(nn.Module):
+    '''Construction of the BasicBlock'''
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
@@ -93,6 +102,7 @@ class BasicBlock(nn.Module):
 
 
 class Bottleneck(nn.Module):
+    '''Construction of the Bottleneck'''
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
@@ -125,7 +135,7 @@ class Bottleneck(nn.Module):
 
         out = self.conv3(out)
         out = self.bn3(out)
-
+           
         out = self.ca(out) * out
         out = self.sa(out) * out
 
@@ -139,7 +149,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-
+    '''Construction of the ResNet network'''
     def __init__(self, block, layers, num_classes=10):
         self.inplanes = 64
         super(ResNet, self).__init__()
