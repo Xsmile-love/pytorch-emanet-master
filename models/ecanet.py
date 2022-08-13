@@ -36,6 +36,7 @@ def conv3x3(in_planes, out_planes, stride=1):
 
 
 class ECABasicBlock(nn.Module):
+    '''construction of Basic block, Similar to ResNet network, but with additional eca module'''
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, k_size=3):
@@ -58,7 +59,8 @@ class ECABasicBlock(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.eca(out)
-
+        
+        # shortcut branch
         if self.downsample is not None:
             residual = self.downsample(x)
 
@@ -69,6 +71,7 @@ class ECABasicBlock(nn.Module):
 
 
 class ECABottleneck(nn.Module):
+    '''construction of ECABottleneck block, Similar to ResNet network, but with additional eca module'''
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, k_size=3):
@@ -205,24 +208,7 @@ def eca_resnet50(k_size=[3, 5, 5, 7], num_classes=10, pretrained=False):
     """
     print("Constructing eca_resnet50......")
     model = ResNet(ECABottleneck, [3, 4, 6, 3], num_classes=num_classes, k_size=k_size)
-    # model.avgpool = nn.AdaptiveAvgPool2d(1)
-    # if pretrained:
-    #     # state_dict = load_state_dict_from_url("https://download.pytorch.org/models/resnet50-19c8e357.pth",
-    #     #                                       model_dir="./model_data")
-    #     checkpoint = torch.load('./model_data/pretrain_data/eca_resnet50_/model_best.pth.tar',map_location='cpu')
-    #     model.load_state_dict(checkpoint['state_dict'])
-    #     print('load weight successful')
-    # # ----------------------------------------------------------------------------#
-    # #   获取特征提取部分，从conv1到model.layer3，最终获得一个38,38,1024的特征层
-    # # ----------------------------------------------------------------------------#
-    # features = list([model.conv1, model.bn1, model.relu, model.maxpool, model.layer1, model.layer2, model.layer3])
-    # # ----------------------------------------------------------------------------#
-    # #   获取分类部分，从model.layer4到model.avgpool
-    # # ----------------------------------------------------------------------------#
-    # classifier = list([model.layer4, model.avgpool])
-    #
-    # features = nn.Sequential(*features)
-    # classifier = nn.Sequential(*classifier)
+    
     return model
 
 def eca_resnet101(k_size=[3, 3, 3, 3], num_classes=100, pretrained=False):
