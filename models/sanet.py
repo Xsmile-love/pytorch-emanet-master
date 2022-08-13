@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 __all__ = ["load_state_dict", "load_checkpoint"]
 
-
+# Loading model state dict
 def load_state_dict(checkpoint_path):
     if checkpoint_path and os.path.isfile(checkpoint_path):
         checkpoint = torch.load(checkpoint_path, map_location='cpu')
@@ -51,8 +51,12 @@ class sa_layer(nn.Module):
         super(sa_layer, self).__init__()
         self.groups = groups
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        
+        # feature map channel weight and bias
         self.cweight = Parameter(torch.zeros(1, channel // (2 * groups), 1, 1))
         self.cbias = Parameter(torch.ones(1, channel // (2 * groups), 1, 1))
+        
+        # feature map spatial weight and bias
         self.sweight = Parameter(torch.zeros(1, channel // (2 * groups), 1, 1))
         self.sbias = Parameter(torch.ones(1, channel // (2 * groups), 1, 1))
 
@@ -62,18 +66,21 @@ class sa_layer(nn.Module):
     @staticmethod
     def channel_shuffle(x, groups):
         b, c, h, w = x.shape
-
+        
+        # (b, groups, c / groups, h, w)-->(b, c / groups, groups, h, w)
         x = x.reshape(b, groups, -1, h, w)
         x = x.permute(0, 2, 1, 3, 4)
 
-        # flatten
+        # flatten, feature map channel shuffle
+        # (b, c / groups, groups, h, w)-->(b, c, h, w)
         x = x.reshape(b, -1, h, w)
 
         return x
 
     def forward(self, x):
         b, c, h, w = x.shape
-
+        
+        # (b,c,h,w)-->(b * self.groups, c / self.groups,h,w)
         x = x.reshape(b * self.groups, -1, h, w)
         x_0, x_1 = x.chunk(2, dim=1)
 
@@ -107,6 +114,7 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 
 class SABottleneck(nn.Module):
+    '''The SABottleneck is similar to the resnet network Bottleneck, just adding the sa layer at the end'''
     expansion = 4
     __constants__ = ['downsample']
 
@@ -255,14 +263,17 @@ def _sanet(arch, block, layers, pretrained, **kwargs):
 
 
 def sa_resnet50(pretrained=False):
+    '''Build sa_resnet50 network with 50 layers'''
     model = _sanet('SANet-50', SABottleneck, [3, 4, 6, 3], pretrained=pretrained)
     return model
 
 
 def sa_resnet101(pretrained=False):
+    '''Build sa_resnet101 network with 101 layers'''
     model = _sanet('SANet-101', SABottleneck, [3, 4, 23, 3], pretrained=pretrained)
 
 
 def sa_resnet152(pretrained=False):
+    '''Build sa_resnet152 network with 152 layers'''
     model = _sanet('sSANet-152', SABottleneck, [3, 8, 36, 3], pretrained=pretrained)
     return model
