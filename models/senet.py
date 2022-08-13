@@ -4,6 +4,12 @@ from torchvision.models import ResNet
 
 
 class SELayer(nn.Module):
+    '''
+    channel: input feature map channel number
+    reduction: channel decray rate
+    Args:
+        Modeling of statistical information on feature map channels
+    '''
     def __init__(self, channel, reduction=16):
         super(SELayer, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
@@ -21,10 +27,12 @@ class SELayer(nn.Module):
         return x * y.expand_as(x)
 
 def conv3x3(in_planes, out_planes, stride=1):
+    '''3x3 convolution with padding'''
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
 
 
 class SEBasicBlock(nn.Module):
+    '''The SEBasicBlock is similar to the BasicBlock in the resnet network, but the SE layer is added at the end'''
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
@@ -60,6 +68,7 @@ class SEBasicBlock(nn.Module):
 
 
 class SEBottleneck(nn.Module):
+    '''The SEBottleneck is similar to the Bottleneck in the resnet network, but the SE layer is added at the end'''
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
