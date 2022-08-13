@@ -52,7 +52,7 @@ TOTAL_BAR_LENGTH = 65.
 last_time = time.time()
 begin_time = last_time
 
-
+# Print model training progress bar
 def progress_bar(current, total, msg=None):
     global last_time, begin_time
     if current == 0:
@@ -68,7 +68,7 @@ def progress_bar(current, total, msg=None):
     for i in range(rest_len):
         sys.stdout.write('.')
     sys.stdout.write(']')
-
+    # Calculate the model training time for one epoch and total time
     cur_time = time.time()
     step_time = cur_time - last_time
     last_time = cur_time
@@ -96,7 +96,7 @@ def progress_bar(current, total, msg=None):
         sys.stdout.write('\n')
     sys.stdout.flush()
 
-
+# Convert time format
 def format_time(seconds):
     days = int(seconds / 3600/24)
     seconds = seconds - days*3600*24
@@ -107,7 +107,7 @@ def format_time(seconds):
     secondsf = int(seconds)
     seconds = seconds - secondsf
     millis = int(seconds*1000)
-
+    # Add unit at the end
     f = ''
     i = 1
     if days > 0:
