@@ -110,27 +110,27 @@ class EvalCallback():
                 f.write("\n")
 
     #---------------------------------------------------#
-    #   检测图片
+    #   Testing pictures
     #---------------------------------------------------#
     def get_map_txt(self, image_id, image, class_names, map_out_path):
         f = open(os.path.join(map_out_path, "detection-results/"+image_id+".txt"),"w")
         #---------------------------------------------------#
-        #   计算输入图片的高和宽
+        #   Calculate the height and width of the input image
         #---------------------------------------------------#
         image_shape = np.array(np.shape(image)[0:2])
         input_shape = get_new_img_size(image_shape[0], image_shape[1])
         #---------------------------------------------------------#
-        #   在这里将图像转换成RGB图像，防止灰度图在预测时报错。
-        #   代码仅仅支持RGB图像的预测，所有其它类型的图像都会转化成RGB
+        #   Here the image is converted to RGB image to prevent the grayscale map from reporting errors in prediction.
+        #   The code only supports RGB image prediction, all other types of images will be converted to RGB
         #---------------------------------------------------------#
         image       = cvtColor(image)
         
         #---------------------------------------------------------#
-        #   给原图像进行resize，resize到短边为600的大小上
+        #   Resize the original image, resize to a size of 600 on the short side
         #---------------------------------------------------------#
         image_data  = resize_image(image, [input_shape[1], input_shape[0]])
         #---------------------------------------------------------#
-        #   添加上batch_size维度
+        #   Add on the batch_size dimension
         #---------------------------------------------------------#
         image_data  = np.expand_dims(np.transpose(preprocess_input(np.array(image_data, dtype='float32')), (2, 0, 1)), 0)
 
@@ -141,12 +141,12 @@ class EvalCallback():
 
             roi_cls_locs, roi_scores, rois, _ = self.net(images)
             #-------------------------------------------------------------#
-            #   利用classifier的预测结果对建议框进行解码，获得预测框
+            #   Decode the suggestion frame using the prediction result of the classifier to obtain the prediction frame
             #-------------------------------------------------------------#
             results = self.bbox_util.forward(roi_cls_locs, roi_scores, rois, image_shape, input_shape, 
                                                     nms_iou = self.nms_iou, confidence = self.confidence)
             #--------------------------------------#
-            #   如果没有检测到物体，则返回原图
+            #   If no object is detected, the original image is returned
             #--------------------------------------#
             if len(results[0]) <= 0:
                 return 
@@ -187,20 +187,20 @@ class EvalCallback():
                 line        = annotation_line.split()
                 image_id    = os.path.basename(line[0]).split('.')[0]
                 #------------------------------#
-                #   读取图像并转换成RGB图像
+                #   Read images and convert to RGB images
                 #------------------------------#
                 image       = Image.open(line[0])
                 #------------------------------#
-                #   获得预测框
+                #   Get Prediction Boxes
                 #------------------------------#
                 gt_boxes    = np.array([np.array(list(map(int,box.split(',')))) for box in line[1:]])
                 #------------------------------#
-                #   获得预测txt
+                #   Get Prediction Boxes
                 #------------------------------#
                 self.get_map_txt(image_id, image, self.class_names, self.map_out_path)
                 
                 #------------------------------#
-                #   获得真实框txt
+                #   Get Real Box txt
                 #------------------------------#
                 with open(os.path.join(self.map_out_path, "ground-truth/"+image_id+".txt"), "w") as new_f:
                     for box in gt_boxes:
