@@ -4,18 +4,18 @@ from torch.hub import load_state_dict_from_url
 
 
 #--------------------------------------#
-#   VGG16的结构
+#   Structure of the VGG16
 #--------------------------------------#
 class VGG(nn.Module):
     def __init__(self, features, num_classes=1000, init_weights=True):
         super(VGG, self).__init__()
         self.features = features
         #--------------------------------------#
-        #   平均池化到7x7大小
+        #   Average pooling to a size of 7x7
         #--------------------------------------#
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
         #--------------------------------------#
-        #   分类部分
+        #   Classification section
         #--------------------------------------#
         self.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 4096),
@@ -31,19 +31,19 @@ class VGG(nn.Module):
 
     def forward(self, x):
         #--------------------------------------#
-        #   特征提取
+        #   Feature Extraction
         #--------------------------------------#
         x = self.features(x)
         #--------------------------------------#
-        #   平均池化
+        #   Average pooling
         #--------------------------------------#
         x = self.avgpool(x)
         #--------------------------------------#
-        #   平铺后
+        #   After flattening
         #--------------------------------------#
         x = torch.flatten(x, 1)
         #--------------------------------------#
-        #   分类部分
+        #   Classification section
         #--------------------------------------#
         x = self.classifier(x)
         return x
@@ -62,16 +62,16 @@ class VGG(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
 '''
-假设输入图像为(600, 600, 3)，随着cfg的循环，特征层变化如下：
+Suppose the input image is (600, 600, 3) and the feature layer changes as the cfg cycles as follows:
 600,600,3 -> 600,600,64 -> 600,600,64 -> 300,300,64 -> 300,300,128 -> 300,300,128 -> 150,150,128 -> 150,150,256 -> 150,150,256 -> 150,150,256 
 -> 75,75,256 -> 75,75,512 -> 75,75,512 -> 75,75,512 -> 37,37,512 ->  37,37,512 -> 37,37,512 -> 37,37,512
-到cfg结束，我们获得了一个37,37,512的特征层
+By the end of the cfg, we obtain a feature layer of 37,37,512
 '''
 
 cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']
 
 #--------------------------------------#
-#   特征提取部分
+#   Feature extraction part
 #--------------------------------------#
 def make_layers(cfg, batch_norm=False):
     layers = []
@@ -94,11 +94,11 @@ def decom_vgg16(pretrained = False):
         state_dict = load_state_dict_from_url("https://download.pytorch.org/models/vgg16-397923af.pth", model_dir="./model_data")
         model.load_state_dict(state_dict)
     #----------------------------------------------------------------------------#
-    #   获取特征提取部分，最终获得一个37,37,1024的特征层
+    #   Get the feature extraction part and finally get a feature layer of 37,37,1024
     #----------------------------------------------------------------------------#
     features    = list(model.features)[:30]
     #----------------------------------------------------------------------------#
-    #   获取分类部分，需要除去Dropout部分
+    #   Get the category section, need to remove the Dropout section
     #----------------------------------------------------------------------------#
     classifier  = list(model.classifier)
     del classifier[6]
