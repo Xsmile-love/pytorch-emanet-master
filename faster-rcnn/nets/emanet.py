@@ -7,6 +7,9 @@ import torch.nn.functional as F
 
 
 class _BatchAttNorm(_BatchNorm):
+    '''
+    num_features: input features map channel numbers
+    '''
     def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=False):
         super(_BatchAttNorm, self).__init__(num_features, eps, momentum, affine)
         self.avg = nn.AdaptiveAvgPool2d((1, 1))
@@ -25,6 +28,7 @@ class _BatchAttNorm(_BatchNorm):
         self._check_input_dim(input)
 
         # Soft Batch norm
+        # It is found in the experiment that the channel modeling ability can be enhanced by recorrecting the attention weight
         attention = self.sigmoid(self.avg(input) * self.weight_readjust + self.bias_readjust)
         bn_w = self.weight * self.softmax(attention)
 
@@ -272,16 +276,18 @@ class EMANet(nn.Module):
 
 
 def emanet50(pretrained=False):
+    '''Building the emanet50 network'''
     model = EMANet(EMABlock, [3, 4, 6, 3], num_classes=10)
     if pretrained:
+        # Loading weights
         state_dict = torch.load("./model_data")
         model.load_state_dict(state_dict)
     # ----------------------------------------------------------------------------#
-    #   获取特征提取部分，从conv1到model.layer3，最终获得一个38,38,1024的特征层
+    #   Get the feature extraction part, from conv1 to model.layer3, and finally get a feature layer of 38,38,1024
     # ----------------------------------------------------------------------------#
     features = list([model.conv1, model.bn1, model.relu, model.maxpool, model.layer1, model.layer2, model.layer3])
     # ----------------------------------------------------------------------------#
-    #   获取分类部分，从model.layer4到model.avgpool
+    #   Get the classification section from model.layer4 to model.avgpool
     # ----------------------------------------------------------------------------#
     classifier = list([model.layer4, model.avgpool])
 
