@@ -1,6 +1,5 @@
 #----------------------------------------------------#
-#   将单张图片预测、摄像头检测和FPS测试功能
-#   整合到了一个py文件中，通过指定mode进行模式的修改。
+#   Single image prediction, camera detection and FPS test functions are integrated into one py file, and mode modification is performed by specifying mode.
 #----------------------------------------------------#
 import time
 
@@ -13,60 +12,62 @@ from frcnn import FRCNN
 if __name__ == "__main__":
     frcnn = FRCNN()
     #----------------------------------------------------------------------------------------------------------#
-    #   mode用于指定测试的模式：
-    #   'predict'           表示单张图片预测，如果想对预测过程进行修改，如保存图片，截取对象等，可以先看下方详细的注释
-    #   'video'             表示视频检测，可调用摄像头或者视频进行检测，详情查看下方注释。
-    #   'fps'               表示测试fps，使用的图片是img里面的street.jpg，详情查看下方注释。
-    #   'dir_predict'       表示遍历文件夹进行检测并保存。默认遍历img文件夹，保存img_out文件夹，详情查看下方注释。
+    #   mode is used to specify the mode of the test:
+    #   'predict'           Indicates a single image prediction, if you want to modify the prediction process, such as saving images, intercepting objects, etc., you can first read the detailed comments below
+    #   'video'             Indicates video detection, you can call the camera or video for detection, check the comments below for details.
+    #   'fps'               Indicates test fps, the image used is street.jpg inside img, check the comments below for details.
+    #   'dir_predict'       Indicates that the folder is traversed for inspection and saved. Default traverses the img folder and saves the img_out folder, see the comments below for details.
     #----------------------------------------------------------------------------------------------------------#
     mode = "predict"
     #-------------------------------------------------------------------------#
-    #   crop                指定了是否在单张图片预测后对目标进行截取
-    #   count               指定了是否进行目标的计数
-    #   crop、count仅在mode='predict'时有效
+    #   crop:                Specifies whether to intercept the target after a single image prediction
+    #   count:               Specifies whether to do a count of the targets
+    #   crop, count are only valid when mode='predict'
     #-------------------------------------------------------------------------#
     crop            = False
     count           = False
     #----------------------------------------------------------------------------------------------------------#
-    #   video_path          用于指定视频的路径，当video_path=0时表示检测摄像头
-    #                       想要检测视频，则设置如video_path = "xxx.mp4"即可，代表读取出根目录下的xxx.mp4文件。
-    #   video_save_path     表示视频保存的路径，当video_save_path=""时表示不保存
-    #                       想要保存视频，则设置如video_save_path = "yyy.mp4"即可，代表保存为根目录下的yyy.mp4文件。
-    #   video_fps           用于保存的视频的fps
+    #   video_path:          Used to specify the path of the video, when video_path=0 means detect the camera.
+    #                        If you want to detect the video, set e.g. video_path = "xxx.mp4", which means read out the xxx.mp4 file in the root directory.
+    #   video_save_path:     Indicates the path where the video is saved, when video_save_path="" means not saved.
+    #                        If you want to save the video, set e.g. video_save_path = "yyyy.mp4", which means save as yyyy.mp4 file in the root directory.
+    #   video_fps:           The fps of the video used for saving.
     #
-    #   video_path、video_save_path和video_fps仅在mode='video'时有效
-    #   保存视频时需要ctrl+c退出或者运行到最后一帧才会完成完整的保存步骤。
+    #   video_path, video_save_path and video_fps are only valid when mode='video'.
+    #   Saving the video requires ctrl+c to exit or run to the last frame to complete the full save step.
     #----------------------------------------------------------------------------------------------------------#
     video_path      = 0
     video_save_path = ""
     video_fps       = 25.0
     #----------------------------------------------------------------------------------------------------------#
-    #   test_interval       用于指定测量fps的时候，图片检测的次数。理论上test_interval越大，fps越准确。
-    #   fps_image_path      用于指定测试的fps图片
+    #   test_interval:       Used to specify the number of times the image will be tested when measuring fps. Theoretically the larger the test_interval, the more accurate the fps.
+    #   fps_image_path:      The fps image used to specify the test
     #   
-    #   test_interval和fps_image_path仅在mode='fps'有效
+    #   test_interval and fps_image_path are only valid for mode='fps'
     #----------------------------------------------------------------------------------------------------------#
     test_interval   = 100
     fps_image_path  = "img/street.jpg"
     #-------------------------------------------------------------------------#
-    #   dir_origin_path     指定了用于检测的图片的文件夹路径
-    #   dir_save_path       指定了检测完图片的保存路径
+    #   dir_origin_path:     Specifies the folder path of the images to be detected
+    #   dir_save_path:       Specifies the path to save the detected images
     #   
-    #   dir_origin_path和dir_save_path仅在mode='dir_predict'时有效
+    #   dir_origin_path and dir_save_path are only valid when mode='dir_predict'
     #-------------------------------------------------------------------------#
     dir_origin_path = "img/"
     dir_save_path   = "img_out/"
 
     if mode == "predict":
         '''
-        1、该代码无法直接进行批量预测，如果想要批量预测，可以利用os.listdir()遍历文件夹，利用Image.open打开图片文件进行预测。
-        具体流程可以参考get_dr_txt.py，在get_dr_txt.py即实现了遍历还实现了目标信息的保存。
-        2、如果想要进行检测完的图片的保存，利用r_image.save("img.jpg")即可保存，直接在predict.py里进行修改即可。 
-        3、如果想要获得预测框的坐标，可以进入frcnn.detect_image函数，在绘图部分读取top，left，bottom，right这四个值。
-        4、如果想要利用预测框截取下目标，可以进入frcnn.detect_image函数，在绘图部分利用获取到的top，left，bottom，right这四个值
-        在原图上利用矩阵的方式进行截取。
-        5、如果想要在预测图上写额外的字，比如检测到的特定目标的数量，可以进入frcnn.detect_image函数，在绘图部分对predicted_class进行判断，
-        比如判断if predicted_class == 'car': 即可判断当前目标是否为车，然后记录数量即可。利用draw.text即可写字。
+        1、The code can't do batch prediction directly, if you want to do batch prediction, you can use os.listdir() to traverse the folder and use Image.open to 
+           open the image file for prediction. The specific process can be referred to get_dr_txt.py, in get_dr_txt.py that achieves the traversal also achieves 
+           the saving of the target information.
+        2、If you want to save the detected image, use r_image.save("img.jpg") to save it, and modify it directly in predict.py. 
+        3、If you want to get the coordinates of the prediction box, you can go to the frcnn.detect_image function and read the four values of top, left, bottom, and right in the drawing section.
+        4、If you want to use the prediction box to intercept the lower target, you can enter the frcnn.detect_image function and use the top, left, bottom, and right values obtained in the drawing
+           section to intercept the original image in the form of a matrix.
+        5、If you want to write additional words on the predicted image, such as the number of specific targets detected, you can go to the frcnn.detect_image function
+           and make a judgment on predicted_class in the drawing section. For example, judge if predicted_class == 'car': that is, you can determine whether the current
+           target is a car, and then just record the number. Use draw.text to write.
         '''
         while True:
             img = input('Input image filename:')
@@ -89,15 +90,15 @@ if __name__ == "__main__":
         fps = 0.0
         while(True):
             t1 = time.time()
-            # 读取某一帧
+            # Read a frame
             ref,frame=capture.read()
-            # 格式转变，BGRtoRGB
+            # Format transformation, BGRtoRGB
             frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-            # 转变成Image
+            # Convert to Image
             frame = Image.fromarray(np.uint8(frame))
-            # 进行检测
+            # Perform testing
             frame = np.array(frcnn.detect_image(frame))
-            # RGBtoBGR满足opencv显示格式
+            # RGBtoBGR meets the opencv display format
             frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)
             
             fps  = ( fps + (1./(time.time()-t1)) ) / 2
