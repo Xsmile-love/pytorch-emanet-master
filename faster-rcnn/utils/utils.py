@@ -2,8 +2,8 @@ import numpy as np
 from PIL import Image
 
 #---------------------------------------------------------#
-#   将图像转换成RGB图像，防止灰度图在预测时报错。
-#   代码仅仅支持RGB图像的预测，所有其它类型的图像都会转化成RGB
+#   Convert images to RGB images to prevent grayscale maps from reporting errors in prediction.
+#   The code only supports RGB image prediction, all other types of images will be converted to RGB
 #---------------------------------------------------------#
 def cvtColor(image):
     if len(np.shape(image)) == 3 and np.shape(image)[2] == 3:
@@ -13,7 +13,7 @@ def cvtColor(image):
         return image 
 
 #---------------------------------------------------#
-#   对输入图像进行resize
+#   Perform resize on the input image
 #---------------------------------------------------#
 def resize_image(image, size):
     w, h        = size
@@ -21,7 +21,7 @@ def resize_image(image, size):
     return new_image
 
 #---------------------------------------------------#
-#   获得类
+#   Acquisition Class
 #---------------------------------------------------#
 def get_classes(classes_path):
     with open(classes_path, encoding='utf-8') as f:
@@ -30,7 +30,7 @@ def get_classes(classes_path):
     return class_names, len(class_names)
 
 #---------------------------------------------------#
-#   获得学习率
+#   Acquisition Learning Rate
 #---------------------------------------------------#
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
