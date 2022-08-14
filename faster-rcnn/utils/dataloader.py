@@ -20,8 +20,8 @@ class FRCNNDataset(Dataset):
     def __getitem__(self, index):
         index       = index % self.length
         #---------------------------------------------------#
-        #   训练时进行数据的随机增强
-        #   验证时不进行数据的随机增强
+        #   Random augmentation of data during training
+        #   No random enhancement of data during validation
         #---------------------------------------------------#
         image, y    = self.get_random_data(self.annotation_lines[index], self.input_shape[0:2], random = self.train)
         image       = np.transpose(preprocess_input(np.array(image, dtype=np.float32)), (2, 0, 1))
@@ -39,17 +39,17 @@ class FRCNNDataset(Dataset):
     def get_random_data(self, annotation_line, input_shape, jitter=.3, hue=.1, sat=0.7, val=0.4, random=True):
         line = annotation_line.split()
         #------------------------------#
-        #   读取图像并转换成RGB图像
+        #   Read images and convert to RGB images
         #------------------------------#
         image   = Image.open(line[0])
         image   = cvtColor(image)
         #------------------------------#
-        #   获得图像的高宽与目标高宽
+        #   Get the height and width of the image and the target height and width
         #------------------------------#
         iw, ih  = image.size
         h, w    = input_shape
         #------------------------------#
-        #   获得预测框
+        #   Get Prediction Box
         #------------------------------#
         box     = np.array([np.array(list(map(int,box.split(',')))) for box in line[1:]])
 
@@ -61,7 +61,7 @@ class FRCNNDataset(Dataset):
             dy = (h-nh)//2
 
             #---------------------------------#
-            #   将图像多余的部分加上灰条
+            #   Add gray bars to the excess parts of the image
             #---------------------------------#
             image       = image.resize((nw,nh), Image.BICUBIC)
             new_image   = Image.new('RGB', (w,h), (128,128,128))
@@ -69,7 +69,7 @@ class FRCNNDataset(Dataset):
             image_data  = np.array(new_image, np.float32)
 
             #---------------------------------#
-            #   对真实框进行调整
+            #   Adjustment of the real frame
             #---------------------------------#
             if len(box)>0:
                 np.random.shuffle(box)
@@ -85,7 +85,7 @@ class FRCNNDataset(Dataset):
             return image_data, box
                 
         #------------------------------------------#
-        #   对图像进行缩放并且进行长和宽的扭曲
+        #   Scaling and length and width warping of images
         #------------------------------------------#
         new_ar = iw/ih * self.rand(1-jitter,1+jitter) / self.rand(1-jitter,1+jitter)
         scale = self.rand(.25, 2)
@@ -98,7 +98,7 @@ class FRCNNDataset(Dataset):
         image = image.resize((nw,nh), Image.BICUBIC)
 
         #------------------------------------------#
-        #   将图像多余的部分加上灰条
+        #   Add gray bars to the excess parts of the image
         #------------------------------------------#
         dx = int(self.rand(0, w-nw))
         dy = int(self.rand(0, h-nh))
@@ -107,24 +107,24 @@ class FRCNNDataset(Dataset):
         image = new_image
 
         #------------------------------------------#
-        #   翻转图像
+        #   Flip image
         #------------------------------------------#
         flip = self.rand()<.5
         if flip: image = image.transpose(Image.FLIP_LEFT_RIGHT)
 
         image_data      = np.array(image, np.uint8)
         #---------------------------------#
-        #   对图像进行色域变换
-        #   计算色域变换的参数
+        #   Color gamut transformation of images
+        #   Calculate the parameters of the color gamut transformation
         #---------------------------------#
         r               = np.random.uniform(-1, 1, 3) * [hue, sat, val] + 1
         #---------------------------------#
-        #   将图像转到HSV上
+        #   Transferring images to HSV
         #---------------------------------#
         hue, sat, val   = cv2.split(cv2.cvtColor(image_data, cv2.COLOR_RGB2HSV))
         dtype           = image_data.dtype
         #---------------------------------#
-        #   应用变换
+        #   Application Transformation
         #---------------------------------#
         x       = np.arange(0, 256, dtype=r.dtype)
         lut_hue = ((x * r[0]) % 180).astype(dtype)
@@ -135,7 +135,7 @@ class FRCNNDataset(Dataset):
         image_data = cv2.cvtColor(image_data, cv2.COLOR_HSV2RGB)
 
         #---------------------------------#
-        #   对真实框进行调整
+        #   Adjustment of the real frame
         #---------------------------------#
         if len(box)>0:
             np.random.shuffle(box)
