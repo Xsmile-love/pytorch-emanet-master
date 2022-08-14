@@ -17,13 +17,13 @@ class FasterRCNN(nn.Module):
         super(FasterRCNN, self).__init__()
         self.feat_stride = feat_stride
         #---------------------------------#
-        #   一共存在两个主干
-        #   vgg和resnet50
+        #   A total of two backbone networks exist
+        #   vgg and resnet50
         #---------------------------------#
         if backbone == 'vgg':
             self.extractor, classifier = decom_vgg16(pretrained)
             #---------------------------------#
-            #   构建建议框网络
+            #   Constructing a suggestion box network
             #---------------------------------#
             self.rpn = RegionProposalNetwork(
                 512, 512,
@@ -33,7 +33,7 @@ class FasterRCNN(nn.Module):
                 mode            = mode
             )
             #---------------------------------#
-            #   构建分类器网络
+            #   Constructing classifier networks
             #---------------------------------#
             self.head = VGG16RoIHead(
                 n_class         = num_classes + 1,
@@ -44,7 +44,7 @@ class FasterRCNN(nn.Module):
         elif backbone == 'resnet50':
             self.extractor, classifier = resnet50(pretrained)
             #---------------------------------#
-            #   构建classifier网络
+            #   Constructing a Classifier Network
             #---------------------------------#
             self.rpn = RegionProposalNetwork(
                 1024, 512,
@@ -54,7 +54,7 @@ class FasterRCNN(nn.Module):
                 mode            = mode
             )
             #---------------------------------#
-            #   构建classifier网络
+            #   Constructing a Classifier Network
             #---------------------------------#
             self.head = Resnet50RoIHead(
                 n_class         = num_classes + 1,
@@ -66,40 +66,40 @@ class FasterRCNN(nn.Module):
     def forward(self, x, scale=1., mode="forward"):
         if mode == "forward":
             #---------------------------------#
-            #   计算输入图片的大小
+            #   Calculate the size of the input image
             #---------------------------------#
             img_size        = x.shape[2:]
             #---------------------------------#
-            #   利用主干网络提取特征
+            #   Feature extraction using backbone network
             #---------------------------------#
             base_feature    = self.extractor.forward(x)
 
             #---------------------------------#
-            #   获得建议框
+            #   Get suggestion box
             #---------------------------------#
             _, _, rois, roi_indices, _  = self.rpn.forward(base_feature, img_size, scale)
             #---------------------------------------#
-            #   获得classifier的分类结果和回归结果
+            #   Get classification results and regression results of classifier
             #---------------------------------------#
             roi_cls_locs, roi_scores    = self.head.forward(base_feature, rois, roi_indices, img_size)
             return roi_cls_locs, roi_scores, rois, roi_indices
         elif mode == "extractor":
             #---------------------------------#
-            #   利用主干网络提取特征
+            #   Feature extraction using backbone network
             #---------------------------------#
             base_feature    = self.extractor.forward(x)
             return base_feature
         elif mode == "rpn":
             base_feature, img_size = x
             #---------------------------------#
-            #   获得建议框
+            #   Get suggestion box
             #---------------------------------#
             rpn_locs, rpn_scores, rois, roi_indices, anchor = self.rpn.forward(base_feature, img_size, scale)
             return rpn_locs, rpn_scores, rois, roi_indices, anchor
         elif mode == "head":
             base_feature, rois, roi_indices, img_size = x
             #---------------------------------------#
-            #   获得classifier的分类结果和回归结果
+            #   Get classification results and regression results of classifier
             #---------------------------------------#
             roi_cls_locs, roi_scores    = self.head.forward(base_feature, rois, roi_indices, img_size)
             return roi_cls_locs, roi_scores
