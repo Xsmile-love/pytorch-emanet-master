@@ -21,20 +21,20 @@ class ProposalCreator():
     
     ):
         #-----------------------------------#
-        #   设置预测还是训练
+        #   Set prediction or training
         #-----------------------------------#
         self.mode               = mode
         #-----------------------------------#
-        #   建议框非极大抑制的iou大小
+        #   Suggested box iou size for non-extreme suppression
         #-----------------------------------#
         self.nms_iou            = nms_iou
         #-----------------------------------#
-        #   训练用到的建议框数量
+        #   Number of suggested boxes used for training
         #-----------------------------------#
         self.n_train_pre_nms    = n_train_pre_nms
         self.n_train_post_nms   = n_train_post_nms
         #-----------------------------------#
-        #   预测用到的建议框数量
+        #   Number of suggestion boxes used for prediction
         #-----------------------------------#
         self.n_test_pre_nms     = n_test_pre_nms
         self.n_test_post_nms    = n_test_post_nms
@@ -49,32 +49,32 @@ class ProposalCreator():
             n_post_nms  = self.n_test_post_nms
 
         #-----------------------------------#
-        #   将先验框转换成tensor
+        #   Convert a priori frame to tensor
         #-----------------------------------#
         anchor = torch.from_numpy(anchor).type_as(loc)
         #-----------------------------------#
-        #   将RPN网络预测结果转化成建议框
+        #   Translating RPN network predictions into suggestion boxes
         #-----------------------------------#
         roi = loc2bbox(anchor, loc)
         #-----------------------------------#
-        #   防止建议框超出图像边缘
+        #   Prevent the suggestion box from going beyond the edge of the image
         #-----------------------------------#
         roi[:, [0, 2]] = torch.clamp(roi[:, [0, 2]], min = 0, max = img_size[1])
         roi[:, [1, 3]] = torch.clamp(roi[:, [1, 3]], min = 0, max = img_size[0])
         
         #-----------------------------------#
-        #   建议框的宽高的最小值不可以小于16
+        #   It is recommended that the minimum value of the width and height of the box should not be less than 16
         #-----------------------------------#
         min_size    = self.min_size * scale
         keep        = torch.where(((roi[:, 2] - roi[:, 0]) >= min_size) & ((roi[:, 3] - roi[:, 1]) >= min_size))[0]
         #-----------------------------------#
-        #   将对应的建议框保留下来
+        #   Keep the corresponding suggestion box
         #-----------------------------------#
         roi         = roi[keep, :]
         score       = score[keep]
 
         #-----------------------------------#
-        #   根据得分进行排序，取出建议框
+        #   Sort by score and take out the suggestion box
         #-----------------------------------#
         order       = torch.argsort(score, descending=True)
         if n_pre_nms > 0:
@@ -83,8 +83,8 @@ class ProposalCreator():
         score   = score[order]
 
         #-----------------------------------#
-        #   对建议框进行非极大抑制
-        #   使用官方的非极大抑制会快非常多
+        #   Non-extreme suppression of the suggestion box
+        #   Using the official non-extreme suppression will be very much faster
         #-----------------------------------#
         keep    = nms(roi, score, self.nms_iou)
         if len(keep) < n_post_nms:
@@ -107,34 +107,34 @@ class RegionProposalNetwork(nn.Module):
     ):
         super(RegionProposalNetwork, self).__init__()
         #-----------------------------------------#
-        #   生成基础先验框，shape为[9, 4]
+        #   Generate a base prior frame with a shape of [9, 4]
         #-----------------------------------------#
         self.anchor_base    = generate_anchor_base(anchor_scales = anchor_scales, ratios = ratios)
         n_anchor            = self.anchor_base.shape[0]
 
         #-----------------------------------------#
-        #   先进行一个3x3的卷积，可理解为特征整合
+        #   A 3x3 convolution is performed first, which can be interpreted as feature integration
         #-----------------------------------------#
         self.conv1  = nn.Conv2d(in_channels, mid_channels, 3, 1, 1)
         #-----------------------------------------#
-        #   分类预测先验框内部是否包含物体
+        #   Classification predicts whether the interior of the a priori frame contains objects
         #-----------------------------------------#
         self.score  = nn.Conv2d(mid_channels, n_anchor * 2, 1, 1, 0)
         #-----------------------------------------#
-        #   回归预测对先验框进行调整
+        #   Regression prediction adjusts for a priori frames
         #-----------------------------------------#
         self.loc    = nn.Conv2d(mid_channels, n_anchor * 4, 1, 1, 0)
 
         #-----------------------------------------#
-        #   特征点间距步长
+        #   Feature point spacing step
         #-----------------------------------------#
         self.feat_stride    = feat_stride
         #-----------------------------------------#
-        #   用于对建议框解码并进行非极大抑制
+        #   Used to decode the suggestion box and perform non-extreme suppression
         #-----------------------------------------#
         self.proposal_layer = ProposalCreator(mode)
         #--------------------------------------#
-        #   对FPN的网络部分进行权值初始化
+        #   Initialization of weights for the network part of the FPN
         #--------------------------------------#
         normal_init(self.conv1, 0, 0.01)
         normal_init(self.score, 0, 0.01)
@@ -143,30 +143,30 @@ class RegionProposalNetwork(nn.Module):
     def forward(self, x, img_size, scale=1.):
         n, _, h, w = x.shape
         #-----------------------------------------#
-        #   先进行一个3x3的卷积，可理解为特征整合
+        #   A 3x3 convolution is performed first, which can be interpreted as feature integration
         #-----------------------------------------#
         x = F.relu(self.conv1(x))
         #-----------------------------------------#
-        #   回归预测对先验框进行调整
+        #   Regression prediction adjusts for a priori frames
         #-----------------------------------------#
         rpn_locs = self.loc(x)
         rpn_locs = rpn_locs.permute(0, 2, 3, 1).contiguous().view(n, -1, 4)
         #-----------------------------------------#
-        #   分类预测先验框内部是否包含物体
+        #   Classification predicts whether the interior of the a priori frame contains objects
         #-----------------------------------------#
         rpn_scores = self.score(x)
         rpn_scores = rpn_scores.permute(0, 2, 3, 1).contiguous().view(n, -1, 2)
         
         #--------------------------------------------------------------------------------------#
-        #   进行softmax概率计算，每个先验框只有两个判别结果
-        #   内部包含物体或者内部不包含物体，rpn_softmax_scores[:, :, 1]的内容为包含物体的概率
+        #   Perform softmax probability calculation with only two discriminant results per prior frame
+        #   The content of rpn_softmax_scores[:, :, 1] is the probability of containing an object if the interior contains an object or if the interior does not contain an object
         #--------------------------------------------------------------------------------------#
         rpn_softmax_scores  = F.softmax(rpn_scores, dim=-1)
         rpn_fg_scores       = rpn_softmax_scores[:, :, 1].contiguous()
         rpn_fg_scores       = rpn_fg_scores.view(n, -1)
 
         #------------------------------------------------------------------------------------------------#
-        #   生成先验框，此时获得的anchor是布满网格点的，当输入图片为600,600,3的时候，shape为(12996, 4)
+        #   Generate the a priori box, the anchor obtained at this time is covered with grid points, when the input image is 600,600,3, the shape is (12996, 4)
         #------------------------------------------------------------------------------------------------#
         anchor = _enumerate_shifted_anchor(np.array(self.anchor_base), self.feat_stride, h, w)
         rois        = list()
