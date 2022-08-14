@@ -11,15 +11,15 @@ class VGG16RoIHead(nn.Module):
         super(VGG16RoIHead, self).__init__()
         self.classifier = classifier
         #--------------------------------------#
-        #   对ROIPooling后的的结果进行回归预测
+        #   Regression prediction of the results after ROIPooling
         #--------------------------------------#
         self.cls_loc    = nn.Linear(4096, n_class * 4)
         #-----------------------------------#
-        #   对ROIPooling后的的结果进行分类
+        #   Classify the results after ROIPooling
         #-----------------------------------#
         self.score      = nn.Linear(4096, n_class)
         #-----------------------------------#
-        #   权值初始化
+        #   Initialization of weights
         #-----------------------------------#
         normal_init(self.cls_loc, 0, 0.001)
         normal_init(self.score, 0, 0.01)
@@ -40,15 +40,15 @@ class VGG16RoIHead(nn.Module):
 
         indices_and_rois = torch.cat([roi_indices[:, None], rois_feature_map], dim=1)
         #-----------------------------------#
-        #   利用建议框对公用特征层进行截取
+        #   Interception of common feature layers using suggestion boxes
         #-----------------------------------#
         pool = self.roi(x, indices_and_rois)
         #-----------------------------------#
-        #   利用classifier网络进行特征提取
+        #   Feature extraction using classifier network
         #-----------------------------------#
         pool = pool.view(pool.size(0), -1)
         #--------------------------------------------------------------#
-        #   当输入为一张图片的时候，这里获得的f7的shape为[300, 4096]
+        #   When the input is an image, the shape of f7 obtained here is [300, 4096]
         #--------------------------------------------------------------#
         fc7 = self.classifier(pool)
 
@@ -64,15 +64,15 @@ class Resnet50RoIHead(nn.Module):
         super(Resnet50RoIHead, self).__init__()
         self.classifier = classifier
         #--------------------------------------#
-        #   对ROIPooling后的的结果进行回归预测
+        #   When the input is an image, the shape of f7 obtained here is [300, 4096]
         #--------------------------------------#
         self.cls_loc = nn.Linear(2048, n_class * 4)
         #-----------------------------------#
-        #   对ROIPooling后的的结果进行分类
+        #   Classify the results after ROIPooling
         #-----------------------------------#
         self.score = nn.Linear(2048, n_class)
         #-----------------------------------#
-        #   权值初始化
+        #   Initialization of weights
         #-----------------------------------#
         normal_init(self.cls_loc, 0, 0.001)
         normal_init(self.score, 0, 0.01)
@@ -93,15 +93,15 @@ class Resnet50RoIHead(nn.Module):
 
         indices_and_rois = torch.cat([roi_indices[:, None], rois_feature_map], dim=1)
         #-----------------------------------#
-        #   利用建议框对公用特征层进行截取
+        #   Interception of common feature layers using suggestion boxes
         #-----------------------------------#
         pool = self.roi(x, indices_and_rois)
         #-----------------------------------#
-        #   利用classifier网络进行特征提取
+        #   Feature extraction using classifier network
         #-----------------------------------#
         fc7 = self.classifier(pool)
         #--------------------------------------------------------------#
-        #   当输入为一张图片的时候，这里获得的f7的shape为[300, 2048]
+        #   When the input is an image, the shape of f7 obtained here is [300, 2048]
         #--------------------------------------------------------------#
         fc7 = fc7.view(fc7.size(0), -1)
 
