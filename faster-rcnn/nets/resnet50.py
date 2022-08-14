@@ -45,7 +45,7 @@ class Bottleneck(nn.Module):
 class ResNet(nn.Module):
     def __init__(self, block, layers, num_classes=1000):
         #-----------------------------------#
-        #   假设输入进来的图片是600,600,3
+        #   Assuming that the input image is 600,600,3
         #-----------------------------------#
         self.inplanes = 64
         super(ResNet, self).__init__()
@@ -62,9 +62,9 @@ class ResNet(nn.Module):
         self.layer1 = self._make_layer(block, 64, layers[0])
         # 150,150,256 -> 75,75,512
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        # 75,75,512 -> 38,38,1024 到这里可以获得一个38,38,1024的共享特征层
+        # 75,75,512 -> 38,38,1024 A shared feature layer of 38,38,1024 can be obtained here
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-        # self.layer4被用在classifier模型中
+        # self.layer4 is used in the classifier model
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         
         self.avgpool = nn.AvgPool2d(7)
@@ -81,7 +81,7 @@ class ResNet(nn.Module):
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
         #-------------------------------------------------------------------#
-        #   当模型需要进行高和宽的压缩的时候，就需要用到残差边的downsample
+        #   When the model needs to be compressed in height and width, the downsample of the residual edge is used
         #-------------------------------------------------------------------#
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -117,11 +117,11 @@ def resnet50(pretrained = False):
         state_dict = load_state_dict_from_url("https://download.pytorch.org/models/resnet50-19c8e357.pth", model_dir="./model_data")
         model.load_state_dict(state_dict)
     #----------------------------------------------------------------------------#
-    #   获取特征提取部分，从conv1到model.layer3，最终获得一个38,38,1024的特征层
+    #   Get the feature extraction part, from conv1 to model.layer3, and finally get a feature layer of 38,38,1024
     #----------------------------------------------------------------------------#
     features    = list([model.conv1, model.bn1, model.relu, model.maxpool, model.layer1, model.layer2, model.layer3])
     #----------------------------------------------------------------------------#
-    #   获取分类部分，从model.layer4到model.avgpool
+    #   Get the classification section from model.layer4 to model.avgpool
     #----------------------------------------------------------------------------#
     classifier  = list([model.layer4, model.avgpool])
     
