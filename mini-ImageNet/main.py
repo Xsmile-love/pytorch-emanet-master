@@ -105,11 +105,13 @@ def main():
         print("=> creating model '{}'".format(args.arch))
 
         model = models.__dict__[args.arch]()
-
+    
+    # Determining whether cuda is none 
     if args.gpu is not None:
         model = model.cuda(args.gpu)
     elif args.distributed:
         model.cuda()
+        # Model Parallelization Training
         model = torch.nn.parallel.DistributedDataParallel(model)
 
     else:
@@ -177,7 +179,7 @@ def main():
     data_root = args.data
     json_path = "./imagenet_class_index.json"
     classes_path = "./classes_name.json"
-    # 实例化训练数据集
+    # Instantiated training dataset
     train_dataset = MyDataSet(root_dir=data_root,
                               csv_name="new_train.csv",
                               json_path=classes_path,
@@ -188,7 +190,7 @@ def main():
         raise ValueError("dataset have {} classes, but input {}".format(len(train_dataset.labels),
                                                                         args.num_classes))
 
-    # 实例化验证数据集
+    # Instantiating the validation dataset
     val_dataset = MyDataSet(root_dir=data_root,
                             csv_name="new_val.csv",
                             json_path=classes_path,
@@ -199,10 +201,12 @@ def main():
     else:
         train_sampler = None
 
+     # Loading train dataset
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=False, sampler=train_sampler, collate_fn=train_dataset.collate_fn)
-
+    
+    # Loading val dataset
     val_loader = torch.utils.data.DataLoader(
         # datasets.ImageFolder(valdir, transforms.Compose([
         #     transforms.Resize(256),
@@ -268,7 +272,7 @@ def main():
         print(' * BestPrec so far@1 {top1:.3f} @5 {top5:.3f} in epoch {best_epoch}'.format(top1=best_prec1,
                                                                                            top5=best_prec5,
                                                                                            best_epoch=best_epoch))
-
+        # Data save code
         data_save(directory + 'Loss_plot.txt', Loss_plot)
         data_save(directory + 'train_prec1.txt', train_prec1_plot)
         data_save(directory + 'train_prec5.txt', train_prec5_plot)
@@ -380,6 +384,9 @@ def validate(val_loader, model, criterion):
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+    '''
+    Save model state dictionary
+    '''
     directory = "runs/%s/" % (args.arch + '_' + args.action)
 
     filename = directory + filename
@@ -432,6 +439,9 @@ def accuracy(output, target, topk=(1,)):
 
 
 def data_save(root, file):
+    '''
+    Saving model training data
+    '''
     if not os.path.exists(root):
         os.mknod(root)
     file_temp = open(root, 'r')
