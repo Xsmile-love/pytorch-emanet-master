@@ -1,3 +1,12 @@
+##########################
+# This repo contains the official Pytorch implementaion code. https://github.com/cfzd/FcaNet
+
+# by Zequn Qin for FcaNet: Frequency Channel Attention Networks
+# https://arxiv.org/abs/2012.11879
+
+# Environment: Python 3.6, Pytorch 1.0
+##########################
+
 import math
 
 import torch.nn as nn
