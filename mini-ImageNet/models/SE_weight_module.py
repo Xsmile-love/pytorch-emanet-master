@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 class SEWeightModule(nn.Module):
-
+'''MLP module'''
     def __init__(self, channels, reduction=16):
         super(SEWeightModule, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
