@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 
 
 class MyDataSet(Dataset):
-    """自定义数据集"""
+    """Self-defined dataset"""
 
     def __init__(self,
                  root_dir: str,
@@ -31,7 +31,7 @@ class MyDataSet(Dataset):
         # for i in range(1000):
         #     labels_dict[self.label_dict[str(i)][0]] = i
         # with open("classes_label.json", "w", encoding='utf-8') as f:
-        #     # indent 超级好用，格式化保存字典，默认为None，小于0为零个空格
+        #     # indent Super nice, formatted to save the dictionary, default is None, less than 0 for zero spaces
         #     f.write(json.dumps(labels_dict, indent=4))
 
         # self.classes_labels = json.load(open(path, "r"))
@@ -45,7 +45,7 @@ class MyDataSet(Dataset):
 
     def __getitem__(self, item):
         img = Image.open(self.img_paths[item])
-        # RGB为彩色图片，L为灰度图片
+        # RGB is the color picture, L is the grayscale picture
         if img.mode != 'RGB':
             raise ValueError("image: {} isn't RGB mode.".format(self.img_paths[item]))
         label = self.img_label[item]
@@ -57,7 +57,7 @@ class MyDataSet(Dataset):
 
     @staticmethod
     def collate_fn(batch):
-        # 官方实现的default_collate可以参考
+        # The official implementation of default_collate can be found in
         # https://github.com/pytorch/pytorch/blob/67b7e751e6b5931a9f45274653f4f653a4e6cdf6/torch/utils/data/_utils/collate.py
         images, labels = tuple(zip(*batch))
 
