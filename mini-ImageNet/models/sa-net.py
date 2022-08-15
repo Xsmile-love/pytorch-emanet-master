@@ -1,3 +1,12 @@
+##########################
+# sa-net official library: https://github.com/Xsmile-love/SA-Net
+
+# By Qing-Long Zhang and Yu-Bin Yang
+# https://arxiv.org/abs/2102.00240
+
+# Environment: Python 3.6+, Pytorch 1.0+
+##########################
+
 import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
