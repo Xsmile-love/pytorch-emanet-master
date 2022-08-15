@@ -1,3 +1,11 @@
+##########################
+# This repo contains the official Pytorch implementaion code. https://github.com/murufeng/EPSANet
+
+# by Hu Zhang for EPSANet: An Efficient Pyramid Squeeze Attention Block on Convolutional Ne
+# https://arxiv.org/abs/2105.14447
+# Environment: Python 3.6+, Pytorch 1.0+
+##########################
+
 import torch
 import torch.nn as nn
 import math
