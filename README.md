@@ -65,3 +65,4 @@ This repository built upon the following repositories. Thank you!
 [https://github.com/gbup-group/IEBN](https://github.com/gbup-group/IEBN)  
 [https://github.com/bubbliiiing/faster-rcnn-pytorch](https://github.com/bubbliiiing/faster-rcnn-pytorch)  
 [https://github.com/open-mmlab/mmdetection](https://github.com/open-mmlab/mmdetection)
+[https://github.com/kuangliu/pytorch-cifar](https://github.com/kuangliu/pytorch-cifar)
