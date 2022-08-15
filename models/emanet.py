@@ -1,3 +1,12 @@
+##########################
+# Modified from https://github.com/murufeng/EPSANet
+
+# by Hu Zhang for EPSANet: An Efficient Pyramid Squeeze Attention Mechanism
+# https://arxiv.org/abs/2105.14447
+
+# Environment: Python 3.6+, Pytorch 1.0+
+##########################
+
 import torch
 import torch.nn as nn
 import math
