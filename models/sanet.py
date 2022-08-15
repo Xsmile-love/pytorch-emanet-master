@@ -1,3 +1,12 @@
+##########################
+# This repo contains the official Pytorch implementaion code. https://github.com/Xsmile-love/SA-Net
+
+# by Qing-Long Zhang for SA-NET: SHUFFLE ATTENTION FOR DEEP CONVOLUTIONAL NEURAL NETWORKS
+# https://arxiv.org/abs/2102.00240
+
+# Environment: Python 3.6, Pytorch 1.0
+##########################
+
 import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
