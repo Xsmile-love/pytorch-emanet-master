@@ -1,3 +1,12 @@
+##########################
+# This repo contains the official Pytorch implementaion code. https://github.com/luuuyi/CBAM.PyTorch
+
+# by Woo S for CBAM: Convolutional Block Attention Module
+# https://arxiv.org/abs/1807.06521
+
+# Environment: Python 3.6+, Pytorch 1.0+
+##########################
+
 import torch
 import torch.nn as nn
 import math
