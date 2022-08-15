@@ -23,19 +23,6 @@ Figure 1: Overall architecture of MC module
 - CUDA:11.3
 - Toolkit:Pytorch 1.11.0
 - GPU:RTX3060Ti
-### Other libraries
-```pip/conda install ...```
-```
-scipy==1.7.3
-numpy==1.20.3
-matplotlib==3.5.1
-opencv_python==4.5.5.64
-torch==1.11.0
-torchvision==0.11.0
-tqdm==4.63.0
-Pillow==9.0.1
-h5py==2.10.0
-```
 
 
 # Evaluation
@@ -71,7 +58,7 @@ To evaluate a pre-trained emanet50 on CIFAR10 val with a single GPU run:
 
 
 # Reference
-
+This library is modified from the following GitHub  
 [https://github.com/gbup-group/IEBN](https://github.com/gbup-group/IEBN)  
 [https://github.com/bubbliiiing/faster-rcnn-pytorch](https://github.com/bubbliiiing/faster-rcnn-pytorch)  
 [https://github.com/open-mmlab/mmdetection](https://github.com/open-mmlab/mmdetection)
