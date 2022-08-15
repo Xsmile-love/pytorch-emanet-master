@@ -1,3 +1,13 @@
+##########################
+# This repo contains the official Pytorch implementaion code. https://github.com/moskomule/senet.pytorch
+
+# by Jie Hu for Squeeze-and-Excitation Networks
+# journal={IEEE Conference on Computer Vision and Pattern Recognition},
+#  year={2018}
+
+# Environment: Python 3.6, Pytorch 1.0
+##########################
+
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url
 from torchvision.models import ResNet
