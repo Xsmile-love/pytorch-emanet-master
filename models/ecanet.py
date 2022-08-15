@@ -1,3 +1,11 @@
+##########################
+# This repo contains the official Pytorch implementaion code. https://github.com/BangguWu/ECANet
+
+# by Qilong Wang for ECA-Net: Efficient Channel Attention
+# https://arxiv.org/abs/1910.03151
+# Environment: Python 3.6+, Pytorch 1.0+
+##########################
+
 import torch
 import torch.nn as nn
 import math
