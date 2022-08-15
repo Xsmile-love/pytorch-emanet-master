@@ -83,8 +83,8 @@ def calculate_split_info(path: str, label_dict: dict, rate: float = 0.2):
 
 
 def main():
-    data_dir = "./data/mini-imagenet/"  # 指向数据集的根目录
-    json_path = "./imagenet_class_index.json"  # 指向imagenet的索引标签文件
+    data_dir = "./data/mini-imagenet/"  # Point to the root of the dataset
+    json_path = "./imagenet_class_index.json"  # Index tag file pointing to imagenet
 
     # load imagenet labels
     label_dict = json.load(open(json_path, "r"))
