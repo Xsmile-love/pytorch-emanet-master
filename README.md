@@ -12,6 +12,9 @@ This repo is the official implementation of **"Multiscale Hybrid Convolutional D
 Figure 1: Overall architecture of MC module
 </p>
 
+### Abstract
+Attention mechanisms can improve the performance of neural network, but the recent attention networks bring greater computational overhead while improving network performance, and how to maintain model performance while reducing complexity is a hot research topic. In this paper, a lightweight Mixture Attention (MA) module is proposed to improve network performance and reduce the complexity of the model. Firstly, the MA module uses multi-branch architecture to process the input feature map to extract the multi-scale feature information of the input image. Secondly, in order to reduce the number of parameters, each branch uses group convolution independently, and the feature maps extracted by different branches are fused along the channel dimension. Finally, the fused feature maps are processed using the channel attention module to extract statistical information of the channels. The proposed method is efficient yet effective, e.g., the network parameters and computational cost are reduced by 9.86% and 7.83%, respectively, and the Top-1 performance is improved by 1.99% compared with ResNet50. Experimental results on common-used benchmarks, including CIFAR-10 for classification and PASCAL-VOC for object detection, demonstrate that the proposed MA outperforms the current SOTA methods significantly by achieving higher accuracy while having lower model complexity. 
+
 
 # Installation
 ### Requirements
@@ -58,7 +61,7 @@ To evaluate a pre-trained emanet50 on CIFAR10 val with a single GPU run:
 
 
 # Reference
-This library is modified from the following GitHub  
+This repository built upon the following repositories. Thank you!  
 [https://github.com/gbup-group/IEBN](https://github.com/gbup-group/IEBN)  
 [https://github.com/bubbliiiing/faster-rcnn-pytorch](https://github.com/bubbliiiing/faster-rcnn-pytorch)  
 [https://github.com/open-mmlab/mmdetection](https://github.com/open-mmlab/mmdetection)
